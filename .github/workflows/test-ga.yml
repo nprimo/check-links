@@ -6,6 +6,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./
+      - name: Test local version
+        uses: ./
+        with:
+          filepath: mock_public/prj_01/README.md
+      - name: Test public latest
+        uses: nprimo/check-links@v0.1
         with:
           filepath: mock_public/prj_01/README.md
