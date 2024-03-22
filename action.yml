@@ -1,0 +1,10 @@
+name: Check links
+description: Check all hyperlinks in the given Markdown file
+author: nprimo
+inputs:
+  filepath:
+    description: "The file path of the Markdown file to be checked"
+    required: true
+runs:
+  using: docker
+  image: Dockerfile
