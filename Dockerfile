@@ -10,7 +10,7 @@ COPY . .
 
 RUN go build -o /app/check-links .
 
-FROM scratch
+FROM alpine
 
 COPY --from=builder /app/check-links /usr/local/bin/check-links
 
