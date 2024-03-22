@@ -18,7 +18,7 @@ func getLinks(cont []byte) []string {
 	for _, match := range matches {
 		if len(match) > 1 {
 			link := match[1]
-            // TODO: have a general function to clean up hyperlink?
+			// TODO: have a general function to clean up hyperlink?
 			if strings.HasPrefix(link, "<") && strings.HasSuffix(link, ">") {
 				link = strings.TrimLeft(link, "<")
 				link = strings.TrimRight(link, ">")
@@ -68,7 +68,8 @@ func main() {
 	for range links {
 		for link, status := range <-ch {
 			if status != 200 {
-				fmt.Printf("(%s) -> status %d\n", link, status)
+				fmt.Printf(
+					"(%s): %q -> status %d\n", filePath, link, status)
 			}
 		}
 	}
