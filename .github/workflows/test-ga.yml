@@ -1,13 +1,11 @@
 name: Test GA
-
 on:
-  push:
-
+  workflow_call:
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./ 
+      - uses: ./
         with:
-          filepath: mock_public/prj_01/README.md 
+          filepath: mock_public/prj_01/README.md
