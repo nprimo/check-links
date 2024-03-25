@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -31,7 +30,7 @@ func getLinks(cont []byte) []string {
 }
 
 // Use HTTP inspired status code return for relative path as well
-func checkLink(link string) int {
+func checkLink(link string, filePath string) int {
 	if strings.HasPrefix(link, "http") {
 		res, err := http.Get(link)
 		if err != nil {
@@ -39,7 +38,6 @@ func checkLink(link string) int {
 		}
 		return res.StatusCode
 	}
-	filePath := os.Getenv("INPUT_FILEPATH")
 	linkAbsPath := path.Join(path.Dir(filePath), link)
 	if _, err := os.Stat(linkAbsPath); err != nil {
 		// Keep it simple: assume file is missing
@@ -48,12 +46,7 @@ func checkLink(link string) int {
 	return 200
 }
 
-func main() {
-	filePath, ok := os.LookupEnv("INPUT_FILEPATH")
-	if !ok {
-		return
-	}
-
+func checkFilePath(filePath string) {
 	cont, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("Error reading %s: %v", filePath, err)
@@ -62,15 +55,34 @@ func main() {
 	links := getLinks(cont)
 	ch := make(chan map[string]int)
 	for _, link := range links {
-		go func(text string) { ch <- map[string]int{link: checkLink(link)} }(link)
+		go func(text string) {
+			ch <- map[string]int{link: checkLink(link, filePath)}
+		}(link)
 	}
 
 	for range links {
 		for link, status := range <-ch {
 			if status != 200 {
-				fmt.Printf(
-					"(%s): %q -> status %d\n", filePath, link, status)
+				log.Printf("(%s): %q -> status %d\n", filePath, link, status)
 			}
 		}
+	}
+}
+
+func main() {
+	input, ok := os.LookupEnv("INPUT_FILEPATH")
+	if !ok {
+		return
+	}
+	filePaths := strings.Split(input, " ")
+	done := make(chan bool)
+	for _, filePath := range filePaths {
+		go func(filepath string) {
+			checkFilePath(filepath)
+			done <- true
+		}(filePath)
+	}
+	for range filePaths {
+		<-done
 	}
 }

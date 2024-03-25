@@ -1,4 +1,8 @@
 name: Test GA
+
+env:
+  MULTIPLE_FPATH: mock_public/prj_01/README.md mock_public/prj_02/README.md
+
 on:
   workflow_call:
 jobs:
@@ -6,11 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Test local version
+
+      - name: Test local version with multiple paths
         uses: ./
         with:
-          filepath: mock_public/prj_01/README.md
-      - name: Test public latest
-        uses: nprimo/check-links@v0.1
+          filepath: ${{env.MULTIPLE_FPATH}}
+
+      - name: Prepare GITHUB_OUTPUT 
+        id: files_to_check
+        run: |
+          echo "fpaths=$(find ./mock_public/ -name *.md | xargs)" >> $GITHUB_OUTPUT
+      - name: Test local version with GITHUB_OUTPUT
+        uses: ./
         with:
-          filepath: mock_public/prj_01/README.md
+          filepath: ${{ steps.files_to_check.outputs.fpaths }}
