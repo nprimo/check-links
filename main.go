@@ -46,10 +46,19 @@ func checkLink(link string, filePath string) int {
 	return 200
 }
 
-func checkFilePath(filePath string) {
+type LinkChecker struct {
+	FilePath   string
+	Link       string
+	StatusCode int
+}
+
+func checkFilePath(filePath string) ([]LinkChecker, error) {
 	cont, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Fatalf("Error reading %s: %v", filePath, err)
+        // TODO: is there a better way than printing out to handle err?
+        // Should I stop for any reason?
+		log.Printf("Error reading %s: %v", filePath, err)
+		return nil, err
 	}
 
 	links := getLinks(cont)
@@ -60,13 +69,17 @@ func checkFilePath(filePath string) {
 		}(link)
 	}
 
+	var res []LinkChecker
 	for range links {
 		for link, status := range <-ch {
-			if status != 200 {
-				log.Printf("(%s): %q -> status %d\n", filePath, link, status)
-			}
+			res = append(res, LinkChecker{
+				FilePath:   filePath,
+				Link:       link,
+				StatusCode: status,
+			})
 		}
 	}
+	return res, nil
 }
 
 func main() {
@@ -75,14 +88,18 @@ func main() {
 		return
 	}
 	filePaths := strings.Split(input, " ")
-	done := make(chan bool)
+	res := make(chan []LinkChecker)
 	for _, filePath := range filePaths {
 		go func(filepath string) {
-			checkFilePath(filepath)
-			done <- true
+			fileChecker, _ := checkFilePath(filepath)
+			res <- fileChecker
 		}(filePath)
 	}
 	for range filePaths {
-		<-done
+		for _, check := range <-res {
+			if check.StatusCode != 200 {
+				log.Printf("(%s): %s -> %d\n", check.FilePath, check.Link, check.StatusCode)
+			}
+		}
 	}
 }
