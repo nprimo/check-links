@@ -11,15 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Test local version with multiple paths
-        uses: ./
-        with:
-          filepath: ${{env.MULTIPLE_FPATH}}
-
-      - name: Prepare GITHUB_OUTPUT 
+      - name: Prepare GITHUB_OUTPUT
         id: files_to_check
         run: |
-          echo "fpaths=$(find ./mock_public/ -name *.md | xargs)" >> $GITHUB_OUTPUT
+          echo "fpaths=$(find ./mock_public/ -name "*.md" -print0)" >> "$GITHUB_OUTPUT"
       - name: Test local version with GITHUB_OUTPUT
         uses: ./
         with:

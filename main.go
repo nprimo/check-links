@@ -55,8 +55,8 @@ type LinkChecker struct {
 func checkFilePath(filePath string) ([]LinkChecker, error) {
 	cont, err := os.ReadFile(filePath)
 	if err != nil {
-        // TODO: is there a better way than printing out to handle err?
-        // Should I stop for any reason?
+		// TODO: is there a better way than printing out to handle err?
+		// Should I stop for any reason?
 		log.Printf("Error reading %s: %v", filePath, err)
 		return nil, err
 	}
@@ -95,11 +95,16 @@ func main() {
 			res <- fileChecker
 		}(filePath)
 	}
+	brokenLinksCount := 0
 	for range filePaths {
 		for _, check := range <-res {
 			if check.StatusCode != 200 {
 				log.Printf("(%s): %s -> %d\n", check.FilePath, check.Link, check.StatusCode)
+				brokenLinksCount++
 			}
 		}
 	}
+    if brokenLinksCount != 0 {
+        log.Fatalf("Found %d broken links!", brokenLinksCount)
+    }
 }
